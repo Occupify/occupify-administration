@@ -1,0 +1,27 @@
+server:
+  port: ${SERVER_PORT:8185}
+
+spring:
+  application:
+    name: occupify-administration
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5534/occupify_administration}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
