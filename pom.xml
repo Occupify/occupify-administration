@@ -19,6 +19,7 @@
 
     <properties>
         <java.version>25</java.version>
+        <spring-framework.version>6.2.7</spring-framework.version>
         <maven.compiler.release>25</maven.compiler.release>
     </properties>
 
@@ -81,6 +82,16 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.occupify.administration.OccupifyAdministrationApplication</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+                </configuration>
             </plugin>
         </plugins>
     </build>
