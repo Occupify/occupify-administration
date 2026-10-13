@@ -98,7 +98,7 @@ jobs:
           mkdir -p ~/.config/systemd/user/git-ops/nginx/body
 
           echo "Inject administration.env..."
-          printf "%s" "$ADMINISTRATION_ENV_CONTENT" > ~/.config/systemd/user/git-ops/env/administration.env
+          printf "%s\n" "$ADMINISTRATION_ENV_CONTENT" > ~/.config/systemd/user/git-ops/env/administration.env
 
           echo "Sync compose and service units..."
           cp compose/docker.*.compose.yml ~/.config/systemd/user/git-ops/compose/
@@ -109,7 +109,6 @@ jobs:
         working-directory: gitops-manifests
         env:
           RUNNER_TRACKING_ID: ""
-          IMAGE_OWNER: ${{ github.repository_owner }}
         run: |
           make be-administration
 
