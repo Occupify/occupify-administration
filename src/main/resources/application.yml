@@ -30,6 +30,10 @@ spring:
 
 app:
   rabbitmq:
+    project-exchange: ${RABBITMQ_PROJECT_EXCHANGE:occupify.project.exchange}
+    project-queue: ${RABBITMQ_PROJECT_QUEUE:occupify.administration.project.queue}
+    project-created-routing-key: ${RABBITMQ_PROJECT_CREATED_ROUTING_KEY:project.created}
+    project-closed-routing-key: ${RABBITMQ_PROJECT_CLOSED_ROUTING_KEY:project.closed}
     user-exchange: ${RABBITMQ_USER_EXCHANGE:occupify.user.exchange}
     user-queue: ${RABBITMQ_USER_QUEUE:occupify.administration.user.queue}
     user-activated-routing-key: ${RABBITMQ_USER_ACTIVATED_ROUTING_KEY:user.activated}

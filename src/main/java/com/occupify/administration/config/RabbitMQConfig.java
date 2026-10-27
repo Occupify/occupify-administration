@@ -5,6 +5,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.occupify.administration.event.ContractAcceptedEvent;
 import com.occupify.administration.event.ContractCompensationRequestedEvent;
 import com.occupify.administration.event.ContractRejectedEvent;
+import com.occupify.administration.event.ProjectClosedEvent;
+import com.occupify.administration.event.ProjectCreatedEvent;
 import com.occupify.administration.event.UserActivatedEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +23,18 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
+
+  @Value("${app.rabbitmq.project-exchange:occupify.project.exchange}")
+  private String projectExchangeName;
+
+  @Value("${app.rabbitmq.project-queue:occupify.administration.project.queue}")
+  private String projectQueueName;
+
+  @Value("${app.rabbitmq.project-created-routing-key:project.created}")
+  private String projectCreatedRoutingKey;
+
+  @Value("${app.rabbitmq.project-closed-routing-key:project.closed}")
+  private String projectClosedRoutingKey;
 
   @Value("${app.rabbitmq.user-exchange:occupify.user.exchange}")
   private String userExchangeName;
@@ -81,6 +95,29 @@ public class RabbitMQConfig {
   @Bean
   public Binding adminContractCompensationBinding(Queue adminContractQueue, TopicExchange contractExchange) {
     return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(contractCompensationRoutingKey);
+  }
+
+  @Bean
+  public TopicExchange projectExchange() {
+    return new TopicExchange(projectExchangeName, true, false);
+  }
+
+  @Bean
+  public Queue adminProjectQueue() {
+    Map<String, Object> args = new HashMap<>();
+    args.put("x-dead-letter-exchange", dlxExchangeName);
+    args.put("x-dead-letter-routing-key", dlqRoutingKey);
+    return QueueBuilder.durable(projectQueueName).withArguments(args).build();
+  }
+
+  @Bean
+  public Binding adminProjectCreatedBinding(Queue adminProjectQueue, TopicExchange projectExchange) {
+    return BindingBuilder.bind(adminProjectQueue).to(projectExchange).with(projectCreatedRoutingKey);
+  }
+
+  @Bean
+  public Binding adminProjectClosedBinding(Queue adminProjectQueue, TopicExchange projectExchange) {
+    return BindingBuilder.bind(adminProjectQueue).to(projectExchange).with(projectClosedRoutingKey);
   }
 
   @Bean
@@ -150,6 +187,14 @@ public class RabbitMQConfig {
     idClassMapping.put("com.occupify.core.event.ContractCompensationRequestedEvent", ContractCompensationRequestedEvent.class);
     idClassMapping.put("com.occupify.administration.event.ContractCompensationRequestedEvent", ContractCompensationRequestedEvent.class);
     idClassMapping.put("ContractCompensationRequestedEvent", ContractCompensationRequestedEvent.class);
+
+    idClassMapping.put("com.occupify.core.event.ProjectCreatedEvent", ProjectCreatedEvent.class);
+    idClassMapping.put("com.occupify.administration.event.ProjectCreatedEvent", ProjectCreatedEvent.class);
+    idClassMapping.put("ProjectCreatedEvent", ProjectCreatedEvent.class);
+
+    idClassMapping.put("com.occupify.core.event.ProjectClosedEvent", ProjectClosedEvent.class);
+    idClassMapping.put("com.occupify.administration.event.ProjectClosedEvent", ProjectClosedEvent.class);
+    idClassMapping.put("ProjectClosedEvent", ProjectClosedEvent.class);
 
     typeMapper.setIdClassMapping(idClassMapping);
 
