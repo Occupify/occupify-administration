@@ -66,7 +66,7 @@ public class ProjectEventListener {
                           .id(event.employerId())
                           .email(email)
                           .fullName("Employer " + event.employerId().toString().substring(0, 8))
-                          .role(UserRole.CLIENT)
+                          .role(UserRole.USER)
                           .status(UserStatus.ACTIVE)
                           .createdAt(Instant.now())
                           .build());

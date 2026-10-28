@@ -53,7 +53,7 @@ class ProjectEventListenerTest {
             .id(employerId)
             .email("employer@occupify.local")
             .fullName("Employer Name")
-            .role(UserRole.CLIENT)
+            .role(UserRole.USER)
             .status(UserStatus.ACTIVE)
             .build();
 
@@ -124,7 +124,7 @@ class ProjectEventListenerTest {
 
     assertThat(fallbackUser.getId()).isEqualTo(employerId);
     assertThat(fallbackUser.getEmail()).isEqualTo("mobile-emp@test.local");
-    assertThat(fallbackUser.getRole()).isEqualTo(UserRole.CLIENT);
+    assertThat(fallbackUser.getRole()).isEqualTo(UserRole.USER);
     assertThat(fallbackUser.getStatus()).isEqualTo(UserStatus.ACTIVE);
 
     verify(projectRepository).save(any(Project.class));
@@ -153,7 +153,7 @@ class ProjectEventListenerTest {
             .id(employerId)
             .email("emp@occupify.local")
             .fullName("Employer")
-            .role(UserRole.CLIENT)
+            .role(UserRole.USER)
             .status(UserStatus.ACTIVE)
             .build();
 

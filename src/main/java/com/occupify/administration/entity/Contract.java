@@ -44,6 +44,18 @@ public class Contract {
   @JoinColumn(name = "employee_id")
   private User employee;
 
+  @Column(name = "title", length = 255)
+  private String title;
+
+  @Column(name = "role", length = 100)
+  private String role;
+
+  @Column(name = "freelancer_email")
+  private String freelancerEmail;
+
+  @Column(name = "message", columnDefinition = "TEXT")
+  private String message;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "source_type", length = 50)
   private SourceType sourceType;
@@ -70,4 +82,10 @@ public class Contract {
 
   @Column(name = "finished_at")
   private Instant finishedAt;
+
+  @Column(name = "created_at")
+  private Instant createdAt;
+
+  @Column(name = "deleted_at")
+  private Instant deletedAt;
 }

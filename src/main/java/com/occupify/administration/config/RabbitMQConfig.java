@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.occupify.administration.event.ContractAcceptedEvent;
 import com.occupify.administration.event.ContractCompensationRequestedEvent;
+import com.occupify.administration.event.ContractCreatedEvent;
 import com.occupify.administration.event.ContractRejectedEvent;
 import com.occupify.administration.event.ProjectClosedEvent;
 import com.occupify.administration.event.ProjectCreatedEvent;
@@ -60,6 +61,9 @@ public class RabbitMQConfig {
   @Value("${app.rabbitmq.contract-queue:occupify.administration.contract.queue}")
   private String contractQueueName;
 
+  @Value("${app.rabbitmq.contract-created-routing-key:contract.created}")
+  private String contractCreatedRoutingKey;
+
   @Value("${app.rabbitmq.contract-accepted-routing-key:contract.accepted}")
   private String contractAcceptedRoutingKey;
 
@@ -80,6 +84,11 @@ public class RabbitMQConfig {
     args.put("x-dead-letter-exchange", dlxExchangeName);
     args.put("x-dead-letter-routing-key", dlqRoutingKey);
     return QueueBuilder.durable(contractQueueName).withArguments(args).build();
+  }
+
+  @Bean
+  public Binding adminContractCreatedBinding(Queue adminContractQueue, TopicExchange contractExchange) {
+    return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(contractCreatedRoutingKey);
   }
 
   @Bean
@@ -159,6 +168,7 @@ public class RabbitMQConfig {
   public MessageConverter jackson2JsonMessageConverter() {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new JavaTimeModule());
+    objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
 
     DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
@@ -175,6 +185,10 @@ public class RabbitMQConfig {
     idClassMapping.put(
         "com.occupify.notification.dto.event.UserActivatedEvent", UserActivatedEvent.class);
     idClassMapping.put("UserActivatedEvent", UserActivatedEvent.class);
+
+    idClassMapping.put("com.occupify.core.event.ContractCreatedEvent", ContractCreatedEvent.class);
+    idClassMapping.put("com.occupify.administration.event.ContractCreatedEvent", ContractCreatedEvent.class);
+    idClassMapping.put("ContractCreatedEvent", ContractCreatedEvent.class);
 
     idClassMapping.put("com.occupify.core.event.ContractAcceptedEvent", ContractAcceptedEvent.class);
     idClassMapping.put("com.occupify.administration.event.ContractAcceptedEvent", ContractAcceptedEvent.class);

@@ -57,7 +57,7 @@ class UserEventListenerTest {
     assertThat(saved.getId()).isEqualTo(userId);
     assertThat(saved.getEmail()).isEqualTo("test@occupify.com");
     assertThat(saved.getFullName()).isEqualTo("Jane Doe");
-    assertThat(saved.getRole()).isEqualTo(UserRole.FREELANCER);
+    assertThat(saved.getRole()).isEqualTo(UserRole.USER);
     assertThat(saved.getStatus()).isEqualTo(UserStatus.ACTIVE);
     assertThat(saved.getCreatedAt()).isEqualTo(Instant.parse("2026-10-25T10:00:00Z"));
   }
@@ -71,7 +71,7 @@ class UserEventListenerTest {
             .id(userId)
             .email("old@occupify.com")
             .fullName("Old Name")
-            .role(UserRole.FREELANCER)
+            .role(UserRole.USER)
             .status(UserStatus.INACTIVE)
             .createdAt(Instant.now().minusSeconds(3600))
             .build();

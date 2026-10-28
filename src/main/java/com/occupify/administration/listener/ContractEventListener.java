@@ -13,6 +13,7 @@ import com.occupify.administration.enums.UserRole;
 import com.occupify.administration.enums.UserStatus;
 import com.occupify.administration.event.ContractAcceptedEvent;
 import com.occupify.administration.event.ContractCompensationRequestedEvent;
+import com.occupify.administration.event.ContractCreatedEvent;
 import com.occupify.administration.event.ContractRejectedEvent;
 import com.occupify.administration.repository.ContractRepository;
 import com.occupify.administration.repository.SystemAuditLogRepository;
@@ -36,6 +37,19 @@ public class ContractEventListener {
   private final ContractRepository contractRepository;
   private final SystemAuditLogRepository auditLogRepository;
   private final UserRepository userRepository;
+
+  @Transactional
+  @RabbitHandler
+  public void handleContractCreated(ContractCreatedEvent event) {
+    if (event == null || event.contractId() == null) {
+      log.warn("[Admin Saga] Received invalid ContractCreatedEvent");
+      return;
+    }
+    log.info(
+        "[Admin Saga] Received ContractCreatedEvent for contractId: [{}]. Replica synchronization deferred until acceptance.",
+        event.contractId());
+    // Do not synchronize contract replica or record audit log at invitation stage
+  }
 
   @Transactional
   @RabbitHandler
@@ -90,30 +104,30 @@ public class ContractEventListener {
               contract.setStatus(ContractStatus.CANCELLED);
               contract.setFinishedAt(Instant.now());
               contractRepository.save(contract);
+
+              User freelancer =
+                  event.freelancerId() != null
+                      ? userRepository.findById(event.freelancerId()).orElse(null)
+                      : null;
+
+              SystemAuditLog auditLog =
+                  SystemAuditLog.builder()
+                      .id(UUID.randomUUID())
+                      .actor(freelancer)
+                      .actorRole(ActorRole.EMPLOYEE)
+                      .action("CONTRACT_REJECTED")
+                      .targetService(TargetService.CORE)
+                      .targetEntity("CONTRACT")
+                      .targetId(event.contractId().toString())
+                      .status(AuditStatus.SUCCESS)
+                      .createdAt(Instant.now())
+                      .build();
+              auditLogRepository.save(auditLog);
+
+              log.info(
+                  "[Admin Saga] Marked contract [{}] as CANCELLED and recorded rejection audit log",
+                  event.contractId());
             });
-
-    User freelancer =
-        event.freelancerId() != null
-            ? userRepository.findById(event.freelancerId()).orElse(null)
-            : null;
-
-    SystemAuditLog auditLog =
-        SystemAuditLog.builder()
-            .id(UUID.randomUUID())
-            .actor(freelancer)
-            .actorRole(ActorRole.EMPLOYEE)
-            .action("CONTRACT_REJECTED")
-            .targetService(TargetService.CORE)
-            .targetEntity("CONTRACT")
-            .targetId(event.contractId().toString())
-            .status(AuditStatus.SUCCESS)
-            .createdAt(Instant.now())
-            .build();
-    auditLogRepository.save(auditLog);
-
-    log.info(
-        "[Admin Saga] Marked contract [{}] as CANCELLED and recorded rejection audit log",
-        event.contractId());
   }
 
   @Transactional
@@ -128,7 +142,7 @@ public class ContractEventListener {
         .findById(event.contractId())
         .ifPresent(
             contract -> {
-              contract.setStatus(ContractStatus.PENDING);
+              contract.setStatus(ContractStatus.CANCELLED);
               contract.setStartedAt(null);
               contractRepository.save(contract);
             });
@@ -148,7 +162,7 @@ public class ContractEventListener {
     auditLogRepository.save(auditLog);
 
     log.info(
-        "[Admin Saga] Reverted contract [{}] to PENDING and recorded compensation audit log",
+        "[Admin Saga] Marked contract [{}] as CANCELLED and recorded compensation audit log",
         event.contractId());
   }
 
@@ -167,7 +181,7 @@ public class ContractEventListener {
                                       .id(event.employerId())
                                       .email("employer-" + event.employerId() + "@occupify.local")
                                       .fullName("Employer " + event.employerId())
-                                      .role(UserRole.CLIENT)
+                                      .role(UserRole.USER)
                                       .status(UserStatus.ACTIVE)
                                       .build()));
 
@@ -186,7 +200,7 @@ public class ContractEventListener {
                                                 + event.freelancerId()
                                                 + "@occupify.local")
                                         .fullName("Freelancer " + event.freelancerId())
-                                        .role(UserRole.FREELANCER)
+                                        .role(UserRole.USER)
                                         .status(UserStatus.ACTIVE)
                                         .build()));
               }
@@ -208,7 +222,7 @@ public class ContractEventListener {
                       .sourceType(SourceType.JOB_BID)
                       .agreedRate(event.budget())
                       .salaryType(st)
-                      .status(ContractStatus.PENDING)
+                      .status(ContractStatus.IN_PROGRESS)
                       .paymentStatus("PENDING")
                       .build();
               return contractRepository.save(newContract);

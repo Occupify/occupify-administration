@@ -64,19 +64,17 @@ public class UserEventListener {
 
   private UserRole parseRole(String roleStr) {
     if (!StringUtils.hasText(roleStr)) {
-      return UserRole.FREELANCER;
+      return UserRole.USER;
     }
     String normalized = roleStr.trim().toUpperCase();
     return switch (normalized) {
       case "ADMIN" -> UserRole.ADMIN;
-      case "CLIENT", "EMPLOYER" -> UserRole.CLIENT;
-      case "FREELANCER", "EMPLOYEE", "USER" -> UserRole.FREELANCER;
       default -> {
         try {
           yield UserRole.valueOf(normalized);
         } catch (IllegalArgumentException e) {
-          log.warn("[Admin Event Listener] Unknown user role [{}], defaulting to FREELANCER", roleStr);
-          yield UserRole.FREELANCER;
+          log.warn("[Admin Event Listener] Unknown user role [{}], defaulting to USER", roleStr);
+          yield UserRole.USER;
         }
       }
     };
