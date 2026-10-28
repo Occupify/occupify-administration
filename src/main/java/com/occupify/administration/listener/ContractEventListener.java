@@ -42,11 +42,11 @@ public class ContractEventListener {
   @RabbitHandler
   public void handleContractCreated(ContractCreatedEvent event) {
     if (event == null || event.contractId() == null) {
-      log.warn("[Admin Saga] Received invalid ContractCreatedEvent");
+      log.warn("[Admin Contract Listener] Received invalid ContractCreatedEvent");
       return;
     }
     log.info(
-        "[Admin Saga] Received ContractCreatedEvent for contractId: [{}]. Replica synchronization deferred until acceptance.",
+        "[Admin Contract Listener] Received ContractCreatedEvent for contractId: [{}]. Replica synchronization deferred until acceptance.",
         event.contractId());
     // Do not synchronize contract replica or record audit log at invitation stage
   }
@@ -55,7 +55,7 @@ public class ContractEventListener {
   @RabbitHandler
   public void handleContractAccepted(ContractAcceptedEvent event) {
     log.info(
-        "[Admin Saga] Handling ContractAcceptedEvent for contractId: {}, employerId: {}, freelancerId: {}",
+        "[Admin Contract Listener] Handling ContractAcceptedEvent for contractId: {}, employerId: {}, freelancerId: {}",
         event.contractId(),
         event.employerId(),
         event.freelancerId());
@@ -85,7 +85,7 @@ public class ContractEventListener {
     auditLogRepository.save(auditLog);
 
     log.info(
-        "[Admin Saga] Successfully updated contract [{}] to IN_PROGRESS and recorded audit log",
+        "[Admin Contract Listener] Successfully updated contract [{}] to IN_PROGRESS and recorded audit log",
         event.contractId());
   }
 
@@ -93,7 +93,7 @@ public class ContractEventListener {
   @RabbitHandler
   public void handleContractRejected(ContractRejectedEvent event) {
     log.info(
-        "[Admin Saga] Handling ContractRejectedEvent for contractId: {}, reason: {}",
+        "[Admin Contract Listener] Handling ContractRejectedEvent for contractId: {}, reason: {}",
         event.contractId(),
         event.reason());
 
@@ -125,7 +125,7 @@ public class ContractEventListener {
               auditLogRepository.save(auditLog);
 
               log.info(
-                  "[Admin Saga] Marked contract [{}] as CANCELLED and recorded rejection audit log",
+                  "[Admin Contract Listener] Marked contract [{}] as CANCELLED and recorded rejection audit log",
                   event.contractId());
             });
   }
@@ -134,7 +134,7 @@ public class ContractEventListener {
   @RabbitHandler
   public void handleContractCompensation(ContractCompensationRequestedEvent event) {
     log.warn(
-        "[Admin Saga] Handling compensation for contractId: {}, reason: {}",
+        "[Admin Contract Listener] Handling compensation for contractId: {}, reason: {}",
         event.contractId(),
         event.reason());
 
@@ -162,7 +162,7 @@ public class ContractEventListener {
     auditLogRepository.save(auditLog);
 
     log.info(
-        "[Admin Saga] Marked contract [{}] as CANCELLED and recorded compensation audit log",
+        "[Admin Contract Listener] Marked contract [{}] as CANCELLED and recorded compensation audit log",
         event.contractId());
   }
 
