@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.occupify.administration.event.ContractAcceptedEvent;
 import com.occupify.administration.event.ContractCompensationRequestedEvent;
+import com.occupify.administration.event.ContractCompletedEvent;
 import com.occupify.administration.event.ContractCreatedEvent;
 import com.occupify.administration.event.ContractRejectedEvent;
 import com.occupify.administration.event.ProjectClosedEvent;
@@ -73,6 +74,9 @@ public class RabbitMQConfig {
   @Value("${app.rabbitmq.contract-compensation-routing-key:contract.compensation.#}")
   private String contractCompensationRoutingKey;
 
+  @Value("${app.rabbitmq.contract-completed-routing-key:contract.completed}")
+  private String contractCompletedRoutingKey;
+
   @Bean
   public TopicExchange contractExchange() {
     return new TopicExchange(contractExchangeName, true, false);
@@ -116,6 +120,11 @@ public class RabbitMQConfig {
     return BindingBuilder.bind(adminContractQueue)
         .to(contractExchange)
         .with(contractCompensationRoutingKey);
+  }
+
+  @Bean
+  public Binding adminContractCompletedBinding(Queue adminContractQueue, TopicExchange contractExchange) {
+    return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(contractCompletedRoutingKey);
   }
 
   @Bean
@@ -233,6 +242,10 @@ public class RabbitMQConfig {
     idClassMapping.put(
         "com.occupify.administration.event.ProjectClosedEvent", ProjectClosedEvent.class);
     idClassMapping.put("ProjectClosedEvent", ProjectClosedEvent.class);
+
+    idClassMapping.put("com.occupify.core.event.ContractCompletedEvent", ContractCompletedEvent.class);
+    idClassMapping.put("com.occupify.administration.event.ContractCompletedEvent", ContractCompletedEvent.class);
+    idClassMapping.put("ContractCompletedEvent", ContractCompletedEvent.class);
 
     typeMapper.setIdClassMapping(idClassMapping);
 
