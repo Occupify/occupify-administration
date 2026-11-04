@@ -10,6 +10,7 @@ import com.occupify.administration.event.ContractCreatedEvent;
 import com.occupify.administration.event.ContractRejectedEvent;
 import com.occupify.administration.event.ProjectClosedEvent;
 import com.occupify.administration.event.ProjectCreatedEvent;
+import com.occupify.administration.event.ReviewCreatedEvent;
 import com.occupify.administration.event.UserActivatedEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,6 +82,9 @@ public class RabbitMQConfig {
   @Value("${app.rabbitmq.contract-cancelled-routing-key:contract.cancelled}")
   private String contractCancelledRoutingKey;
 
+  @Value("${app.rabbitmq.review-created-routing-key:review.created}")
+  private String reviewCreatedRoutingKey;
+
   @Bean
   public TopicExchange contractExchange() {
     return new TopicExchange(contractExchangeName, true, false);
@@ -134,6 +138,11 @@ public class RabbitMQConfig {
   @Bean
   public Binding adminContractCancelledBinding(Queue adminContractQueue, TopicExchange contractExchange) {
     return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(contractCancelledRoutingKey);
+  }
+
+  @Bean
+  public Binding adminReviewCreatedBinding(Queue adminContractQueue, TopicExchange contractExchange) {
+    return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(reviewCreatedRoutingKey);
   }
 
   @Bean
@@ -259,6 +268,10 @@ public class RabbitMQConfig {
     idClassMapping.put("com.occupify.core.event.ContractCancelledEvent", ContractCancelledEvent.class);
     idClassMapping.put("com.occupify.administration.event.ContractCancelledEvent", ContractCancelledEvent.class);
     idClassMapping.put("ContractCancelledEvent", ContractCancelledEvent.class);
+
+    idClassMapping.put("com.occupify.core.event.ReviewCreatedEvent", ReviewCreatedEvent.class);
+    idClassMapping.put("com.occupify.administration.event.ReviewCreatedEvent", ReviewCreatedEvent.class);
+    idClassMapping.put("ReviewCreatedEvent", ReviewCreatedEvent.class);
 
     typeMapper.setIdClassMapping(idClassMapping);
 

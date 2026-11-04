@@ -17,6 +17,7 @@ import com.occupify.administration.event.ContractCompensationRequestedEvent;
 import com.occupify.administration.event.ContractCompletedEvent;
 import com.occupify.administration.event.ContractCreatedEvent;
 import com.occupify.administration.event.ContractRejectedEvent;
+import com.occupify.administration.event.ReviewCreatedEvent;
 import com.occupify.administration.repository.ContractRepository;
 import com.occupify.administration.repository.SystemAuditLogRepository;
 import com.occupify.administration.repository.UserRepository;
@@ -250,6 +251,45 @@ public class ContractEventListener {
     auditLogRepository.save(auditLog);
 
     log.info("[Admin Contract Listener] Recorded CONTRACT_CANCELLED audit log for contract [{}]", event.contractId());
+  }
+
+  @Transactional
+  @RabbitHandler
+  public void handleReviewCreated(ReviewCreatedEvent event) {
+    if (event == null || event.reviewId() == null) {
+      log.warn("[Admin Contract Listener] Received invalid ReviewCreatedEvent");
+      return;
+    }
+    log.info("[Admin Contract Listener] Handling ReviewCreatedEvent for reviewId: {}, contractId: {}",
+        event.reviewId(), event.contractId());
+
+    User actor =
+        event.reviewerId() != null
+            ? userRepository.findById(event.reviewerId()).orElse(null)
+            : null;
+
+    ActorRole actorRole = ActorRole.EMPLOYEE;
+    Optional<Contract> contractOpt = contractRepository.findById(event.contractId());
+    if (contractOpt.isPresent() && contractOpt.get().getEmployer() != null
+        && contractOpt.get().getEmployer().getId().equals(event.reviewerId())) {
+      actorRole = ActorRole.EMPLOYER;
+    }
+
+    SystemAuditLog auditLog =
+        SystemAuditLog.builder()
+            .id(UUID.randomUUID())
+            .actor(actor)
+            .actorRole(actorRole)
+            .action("REVIEW_CREATED")
+            .targetService(TargetService.CORE)
+            .targetEntity("REVIEW")
+            .targetId(event.reviewId().toString())
+            .status(AuditStatus.SUCCESS)
+            .createdAt(Instant.now())
+            .build();
+    auditLogRepository.save(auditLog);
+
+    log.info("[Admin Contract Listener] Recorded REVIEW_CREATED audit log for review [{}]", event.reviewId());
   }
 
   private Contract getOrCreateContract(ContractAcceptedEvent event) {
