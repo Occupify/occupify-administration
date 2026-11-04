@@ -12,6 +12,7 @@ import com.occupify.administration.enums.TargetService;
 import com.occupify.administration.enums.UserRole;
 import com.occupify.administration.enums.UserStatus;
 import com.occupify.administration.event.ContractAcceptedEvent;
+import com.occupify.administration.event.ContractCancelledEvent;
 import com.occupify.administration.event.ContractCompensationRequestedEvent;
 import com.occupify.administration.event.ContractCompletedEvent;
 import com.occupify.administration.event.ContractCreatedEvent;
@@ -204,6 +205,51 @@ public class ContractEventListener {
     auditLogRepository.save(auditLog);
 
     log.info("[Admin Contract Listener] Recorded CONTRACT_COMPLETED audit log for contract [{}]", event.contractId());
+  }
+
+  @Transactional
+  @RabbitHandler
+  public void handleContractCancelled(ContractCancelledEvent event) {
+    if (event == null || event.contractId() == null) {
+      log.warn("[Admin Contract Listener] Received invalid ContractCancelledEvent");
+      return;
+    }
+    log.info("[Admin Contract Listener] Handling ContractCancelledEvent for contractId: {}, reason: {}",
+        event.contractId(), event.reason());
+
+    contractRepository
+        .findById(event.contractId())
+        .ifPresent(
+            contract -> {
+              contract.setStatus(ContractStatus.CANCELLED);
+              contract.setFinishedAt(Instant.now());
+              contractRepository.save(contract);
+            });
+
+    User actor =
+        event.cancelledByUserId() != null
+            ? userRepository.findById(event.cancelledByUserId()).orElse(null)
+            : null;
+
+    ActorRole actorRole = "EMPLOYER".equalsIgnoreCase(event.cancelledByRole())
+        ? ActorRole.EMPLOYER
+        : ActorRole.EMPLOYEE;
+
+    SystemAuditLog auditLog =
+        SystemAuditLog.builder()
+            .id(UUID.randomUUID())
+            .actor(actor)
+            .actorRole(actorRole)
+            .action("CONTRACT_CANCELLED")
+            .targetService(TargetService.CORE)
+            .targetEntity("CONTRACT")
+            .targetId(event.contractId().toString())
+            .status(AuditStatus.SUCCESS)
+            .createdAt(Instant.now())
+            .build();
+    auditLogRepository.save(auditLog);
+
+    log.info("[Admin Contract Listener] Recorded CONTRACT_CANCELLED audit log for contract [{}]", event.contractId());
   }
 
   private Contract getOrCreateContract(ContractAcceptedEvent event) {

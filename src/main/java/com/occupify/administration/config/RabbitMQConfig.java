@@ -3,6 +3,7 @@ package com.occupify.administration.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.occupify.administration.event.ContractAcceptedEvent;
+import com.occupify.administration.event.ContractCancelledEvent;
 import com.occupify.administration.event.ContractCompensationRequestedEvent;
 import com.occupify.administration.event.ContractCompletedEvent;
 import com.occupify.administration.event.ContractCreatedEvent;
@@ -77,6 +78,9 @@ public class RabbitMQConfig {
   @Value("${app.rabbitmq.contract-completed-routing-key:contract.completed}")
   private String contractCompletedRoutingKey;
 
+  @Value("${app.rabbitmq.contract-cancelled-routing-key:contract.cancelled}")
+  private String contractCancelledRoutingKey;
+
   @Bean
   public TopicExchange contractExchange() {
     return new TopicExchange(contractExchangeName, true, false);
@@ -125,6 +129,11 @@ public class RabbitMQConfig {
   @Bean
   public Binding adminContractCompletedBinding(Queue adminContractQueue, TopicExchange contractExchange) {
     return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(contractCompletedRoutingKey);
+  }
+
+  @Bean
+  public Binding adminContractCancelledBinding(Queue adminContractQueue, TopicExchange contractExchange) {
+    return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(contractCancelledRoutingKey);
   }
 
   @Bean
@@ -246,6 +255,10 @@ public class RabbitMQConfig {
     idClassMapping.put("com.occupify.core.event.ContractCompletedEvent", ContractCompletedEvent.class);
     idClassMapping.put("com.occupify.administration.event.ContractCompletedEvent", ContractCompletedEvent.class);
     idClassMapping.put("ContractCompletedEvent", ContractCompletedEvent.class);
+
+    idClassMapping.put("com.occupify.core.event.ContractCancelledEvent", ContractCancelledEvent.class);
+    idClassMapping.put("com.occupify.administration.event.ContractCancelledEvent", ContractCancelledEvent.class);
+    idClassMapping.put("ContractCancelledEvent", ContractCancelledEvent.class);
 
     typeMapper.setIdClassMapping(idClassMapping);
 
