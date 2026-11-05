@@ -131,18 +131,27 @@ public class RabbitMQConfig {
   }
 
   @Bean
-  public Binding adminContractCompletedBinding(Queue adminContractQueue, TopicExchange contractExchange) {
-    return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(contractCompletedRoutingKey);
+  public Binding adminContractCompletedBinding(
+      Queue adminContractQueue, TopicExchange contractExchange) {
+    return BindingBuilder.bind(adminContractQueue)
+        .to(contractExchange)
+        .with(contractCompletedRoutingKey);
   }
 
   @Bean
-  public Binding adminContractCancelledBinding(Queue adminContractQueue, TopicExchange contractExchange) {
-    return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(contractCancelledRoutingKey);
+  public Binding adminContractCancelledBinding(
+      Queue adminContractQueue, TopicExchange contractExchange) {
+    return BindingBuilder.bind(adminContractQueue)
+        .to(contractExchange)
+        .with(contractCancelledRoutingKey);
   }
 
   @Bean
-  public Binding adminReviewCreatedBinding(Queue adminContractQueue, TopicExchange contractExchange) {
-    return BindingBuilder.bind(adminContractQueue).to(contractExchange).with(reviewCreatedRoutingKey);
+  public Binding adminReviewCreatedBinding(
+      Queue adminContractQueue, TopicExchange contractExchange) {
+    return BindingBuilder.bind(adminContractQueue)
+        .to(contractExchange)
+        .with(reviewCreatedRoutingKey);
   }
 
   @Bean
@@ -261,16 +270,21 @@ public class RabbitMQConfig {
         "com.occupify.administration.event.ProjectClosedEvent", ProjectClosedEvent.class);
     idClassMapping.put("ProjectClosedEvent", ProjectClosedEvent.class);
 
-    idClassMapping.put("com.occupify.core.event.ContractCompletedEvent", ContractCompletedEvent.class);
-    idClassMapping.put("com.occupify.administration.event.ContractCompletedEvent", ContractCompletedEvent.class);
+    idClassMapping.put(
+        "com.occupify.core.event.ContractCompletedEvent", ContractCompletedEvent.class);
+    idClassMapping.put(
+        "com.occupify.administration.event.ContractCompletedEvent", ContractCompletedEvent.class);
     idClassMapping.put("ContractCompletedEvent", ContractCompletedEvent.class);
 
-    idClassMapping.put("com.occupify.core.event.ContractCancelledEvent", ContractCancelledEvent.class);
-    idClassMapping.put("com.occupify.administration.event.ContractCancelledEvent", ContractCancelledEvent.class);
+    idClassMapping.put(
+        "com.occupify.core.event.ContractCancelledEvent", ContractCancelledEvent.class);
+    idClassMapping.put(
+        "com.occupify.administration.event.ContractCancelledEvent", ContractCancelledEvent.class);
     idClassMapping.put("ContractCancelledEvent", ContractCancelledEvent.class);
 
     idClassMapping.put("com.occupify.core.event.ReviewCreatedEvent", ReviewCreatedEvent.class);
-    idClassMapping.put("com.occupify.administration.event.ReviewCreatedEvent", ReviewCreatedEvent.class);
+    idClassMapping.put(
+        "com.occupify.administration.event.ReviewCreatedEvent", ReviewCreatedEvent.class);
     idClassMapping.put("ReviewCreatedEvent", ReviewCreatedEvent.class);
 
     typeMapper.setIdClassMapping(idClassMapping);
