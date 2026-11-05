@@ -3,7 +3,8 @@ package com.occupify.administration.repository;
 import com.occupify.administration.entity.Project;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ProjectRepository extends JpaRepository<Project, UUID> {}
+public interface ProjectRepository extends JpaRepository<Project, UUID>, JpaSpecificationExecutor<Project> {}
