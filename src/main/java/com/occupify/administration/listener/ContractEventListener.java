@@ -194,11 +194,21 @@ public class ContractEventListener {
             ? userRepository.findById(event.completedByUserId()).orElse(null)
             : null;
 
+    ActorRole actorRole;
+    if ("ADMIN".equalsIgnoreCase(event.completedByUserRole())) {
+      actorRole = ActorRole.ADMIN;
+    } else if ("EMPLOYEE".equalsIgnoreCase(event.completedByUserRole())
+        || "FREELANCER".equalsIgnoreCase(event.completedByUserRole())) {
+      actorRole = ActorRole.EMPLOYEE;
+    } else {
+      actorRole = ActorRole.EMPLOYER;
+    }
+
     SystemAuditLog auditLog =
         SystemAuditLog.builder()
             .id(UUID.randomUUID())
             .actor(actor)
-            .actorRole(ActorRole.EMPLOYER)
+            .actorRole(actorRole)
             .action("CONTRACT_COMPLETED")
             .targetService(TargetService.CORE)
             .targetEntity("CONTRACT")
@@ -239,10 +249,14 @@ public class ContractEventListener {
             ? userRepository.findById(event.cancelledByUserId()).orElse(null)
             : null;
 
-    ActorRole actorRole =
-        "EMPLOYER".equalsIgnoreCase(event.cancelledByRole())
-            ? ActorRole.EMPLOYER
-            : ActorRole.EMPLOYEE;
+    ActorRole actorRole;
+    if ("ADMIN".equalsIgnoreCase(event.cancelledByRole())) {
+      actorRole = ActorRole.ADMIN;
+    } else if ("EMPLOYER".equalsIgnoreCase(event.cancelledByRole())) {
+      actorRole = ActorRole.EMPLOYER;
+    } else {
+      actorRole = ActorRole.EMPLOYEE;
+    }
 
     SystemAuditLog auditLog =
         SystemAuditLog.builder()
