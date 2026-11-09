@@ -8,7 +8,8 @@ import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 
 public interface AdminProjectService {
-    PageResponse<AdminProjectResponse> getProjects(AdminProjectFilterRequest filter, Pageable pageable);
-    AdminProjectDetailResponse getProjectDetail(UUID id);
-}
+  PageResponse<AdminProjectResponse> getProjects(
+      AdminProjectFilterRequest filter, Pageable pageable);
 
+  AdminProjectDetailResponse getProjectDetail(UUID id);
+}

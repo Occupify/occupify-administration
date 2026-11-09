@@ -10,8 +10,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FlaggedAccountRepository extends JpaRepository<FlaggedAccount, UUID> {
-    Optional<FlaggedAccount> findFirstByUserIdAndStatus(UUID userId, FlagStatus status);
-    List<FlaggedAccount> findByUserIdOrderByCreatedAtDesc(UUID userId);
-    boolean existsByUserIdAndStatus(UUID userId, FlagStatus status);
-}
+  Optional<FlaggedAccount> findFirstByUserIdAndStatus(UUID userId, FlagStatus status);
 
+  List<FlaggedAccount> findByUserIdOrderByCreatedAtDesc(UUID userId);
+
+  boolean existsByUserIdAndStatus(UUID userId, FlagStatus status);
+}

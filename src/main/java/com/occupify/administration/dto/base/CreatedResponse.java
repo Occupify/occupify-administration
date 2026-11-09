@@ -7,4 +7,3 @@ import org.springframework.lang.Nullable;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"statusCode", "message", "data"})
 public record CreatedResponse<T>(Integer statusCode, String message, @Nullable T data) {}
-

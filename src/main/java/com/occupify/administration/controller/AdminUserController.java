@@ -28,36 +28,48 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/admin/users")
-@Tag(name = "Users", description = "Endpoints for platform user governance, moderation, and auditing")
+@Tag(
+    name = "Users",
+    description = "Endpoints for platform user governance, moderation, and auditing")
 public class AdminUserController extends AbstractBaseController {
 
-    private final AdminUserService adminUserService;
+  private final AdminUserService adminUserService;
 
-    public AdminUserController(AdminUserService adminUserService) {
-        this.adminUserService = adminUserService;
-    }
+  public AdminUserController(AdminUserService adminUserService) {
+    this.adminUserService = adminUserService;
+  }
 
-    @GetMapping
-    @Operation(summary = "View and filter accounts", description = "Retrieves a paginated list of accounts with filtering by keyword, status, and role", security = @SecurityRequirement(name = OpenApiConfig.SECURITY_SCHEME_NAME))
-    public ResponseEntity<PageResponse<AdminUserResponse>> getUsers(
-            @ParameterObject AdminUserFilterRequest filter,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
-            @Parameter(hidden = true) @AuthenticatedAdmin AdminContext adminContext) {
-        log.info("[GET /admin/users] Admin [{}] querying accounts with filter: {}", adminContext.adminId(), filter);
-        PageResponse<AdminUserResponse> response = adminUserService.getUsers(filter, pageable);
-        return ResponseEntity.ok(response);
-    }
+  @GetMapping
+  @Operation(
+      summary = "View and filter accounts",
+      description =
+          "Retrieves a paginated list of accounts with filtering by keyword, status, and role",
+      security = @SecurityRequirement(name = OpenApiConfig.SECURITY_SCHEME_NAME))
+  public ResponseEntity<PageResponse<AdminUserResponse>> getUsers(
+      @ParameterObject AdminUserFilterRequest filter,
+      @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+          Pageable pageable,
+      @Parameter(hidden = true) @AuthenticatedAdmin AdminContext adminContext) {
+    log.info(
+        "[GET /admin/users] Admin [{}] querying accounts with filter: {}",
+        adminContext.adminId(),
+        filter);
+    PageResponse<AdminUserResponse> response = adminUserService.getUsers(filter, pageable);
+    return ResponseEntity.ok(response);
+  }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "View profile detail", description = "Retrieves full user detail, moderation flags, and contract history for a specified user", security = @SecurityRequirement(name = OpenApiConfig.SECURITY_SCHEME_NAME))
-    public ResponseEntity<SingleResponse<AdminUserDetailResponse>> getUserDetail(
-            @PathVariable("id") UUID id,
-            @Parameter(hidden = true) @AuthenticatedAdmin AdminContext adminContext) {
-        log.info("[GET /admin/users/{}] Admin [{}] fetching account detail", id, adminContext.adminId());
-        AdminUserDetailResponse response = adminUserService.getUserDetail(id);
-        return successSingle(response, "User details retrieved successfully");
-    }}
-
-    
-
-    
+  @GetMapping("/{id}")
+  @Operation(
+      summary = "View profile detail",
+      description =
+          "Retrieves full user detail, moderation flags, and contract history for a specified user",
+      security = @SecurityRequirement(name = OpenApiConfig.SECURITY_SCHEME_NAME))
+  public ResponseEntity<SingleResponse<AdminUserDetailResponse>> getUserDetail(
+      @PathVariable("id") UUID id,
+      @Parameter(hidden = true) @AuthenticatedAdmin AdminContext adminContext) {
+    log.info(
+        "[GET /admin/users/{}] Admin [{}] fetching account detail", id, adminContext.adminId());
+    AdminUserDetailResponse response = adminUserService.getUserDetail(id);
+    return successSingle(response, "User details retrieved successfully");
+  }
+}

@@ -12,6 +12,4 @@ public record AdminProjectResponse(
     AdminProjectEmployerResponse employer,
     Instant createdAt,
     Instant closedAt,
-    long reportCount
-) {}
-
+    long reportCount) {}
