@@ -17,6 +17,7 @@ import com.occupify.administration.enums.UserRole;
 import com.occupify.administration.enums.UserStatus;
 import com.occupify.administration.event.ContractAcceptedEvent;
 import com.occupify.administration.event.ContractCompensationRequestedEvent;
+import com.occupify.administration.event.ContractCompletedEvent;
 import com.occupify.administration.event.ContractRejectedEvent;
 import com.occupify.administration.repository.ContractRepository;
 import com.occupify.administration.repository.SystemAuditLogRepository;
@@ -200,5 +201,117 @@ class ContractEventListenerTest {
 
     verify(contractRepository, never()).save(any());
     verify(auditLogRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("Should dynamically resolve ADMIN actor role on ContractCompletedEvent")
+  void handleContractCompleted_AdminRole_LogsAdminActorRole() {
+    Contract contract =
+        Contract.builder().id(contractId).jobId(jobId).status(ContractStatus.IN_PROGRESS).build();
+    when(contractRepository.findById(contractId)).thenReturn(Optional.of(contract));
+
+    UUID adminId = UUID.randomUUID();
+    User admin =
+        User.builder().id(adminId).email("admin@occupify.local").role(UserRole.ADMIN).build();
+    when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
+
+    ContractCompletedEvent event =
+        new ContractCompletedEvent(
+            UUID.randomUUID(),
+            contractId,
+            jobId,
+            UUID.randomUUID(),
+            employerId,
+            freelancerId,
+            adminId,
+            "ADMIN",
+            "Title",
+            BigDecimal.TEN,
+            "FIXED",
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            "emp@occupify.local",
+            "Employer",
+            "free@occupify.local",
+            "Freelancer");
+
+    contractEventListener.handleContractCompleted(event);
+
+    assertThat(contract.getStatus()).isEqualTo(ContractStatus.COMPLETED);
+    ArgumentCaptor<SystemAuditLog> captor = ArgumentCaptor.forClass(SystemAuditLog.class);
+    verify(auditLogRepository).save(captor.capture());
+    assertThat(captor.getValue().getActorRole()).isEqualTo(ActorRole.ADMIN);
+  }
+
+  @Test
+  @DisplayName("Should dynamically resolve EMPLOYER actor role on ContractCompletedEvent")
+  void handleContractCompleted_EmployerRole_LogsEmployerActorRole() {
+    Contract contract =
+        Contract.builder().id(contractId).jobId(jobId).status(ContractStatus.IN_PROGRESS).build();
+    when(contractRepository.findById(contractId)).thenReturn(Optional.of(contract));
+    when(userRepository.findById(employerId)).thenReturn(Optional.empty());
+
+    ContractCompletedEvent event =
+        new ContractCompletedEvent(
+            UUID.randomUUID(),
+            contractId,
+            jobId,
+            UUID.randomUUID(),
+            employerId,
+            freelancerId,
+            employerId,
+            "EMPLOYER",
+            "Title",
+            BigDecimal.TEN,
+            "FIXED",
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            "emp@occupify.local",
+            "Employer",
+            "free@occupify.local",
+            "Freelancer");
+
+    contractEventListener.handleContractCompleted(event);
+
+    assertThat(contract.getStatus()).isEqualTo(ContractStatus.COMPLETED);
+    ArgumentCaptor<SystemAuditLog> captor = ArgumentCaptor.forClass(SystemAuditLog.class);
+    verify(auditLogRepository).save(captor.capture());
+    assertThat(captor.getValue().getActorRole()).isEqualTo(ActorRole.EMPLOYER);
+  }
+
+  @Test
+  @DisplayName("Should dynamically resolve EMPLOYEE actor role on ContractCancelledEvent")
+  void handleContractCancelled_EmployeeRole_LogsEmployeeActorRole() {
+    Contract contract =
+        Contract.builder().id(contractId).jobId(jobId).status(ContractStatus.IN_PROGRESS).build();
+    when(contractRepository.findById(contractId)).thenReturn(Optional.of(contract));
+    when(userRepository.findById(freelancerId)).thenReturn(Optional.empty());
+
+    com.occupify.administration.event.ContractCancelledEvent event =
+        new com.occupify.administration.event.ContractCancelledEvent(
+            UUID.randomUUID(),
+            contractId,
+            jobId,
+            UUID.randomUUID(),
+            employerId,
+            freelancerId,
+            freelancerId,
+            "EMPLOYEE",
+            "Mutual consent",
+            "Title",
+            BigDecimal.TEN,
+            "FIXED",
+            LocalDateTime.now(),
+            "emp@occupify.local",
+            "Employer",
+            "free@occupify.local",
+            "Freelancer");
+
+    contractEventListener.handleContractCancelled(event);
+
+    assertThat(contract.getStatus()).isEqualTo(ContractStatus.CANCELLED);
+    ArgumentCaptor<SystemAuditLog> captor = ArgumentCaptor.forClass(SystemAuditLog.class);
+    verify(auditLogRepository).save(captor.capture());
+    assertThat(captor.getValue().getActorRole()).isEqualTo(ActorRole.EMPLOYEE);
   }
 }
