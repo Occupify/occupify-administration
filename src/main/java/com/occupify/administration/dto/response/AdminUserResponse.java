@@ -15,6 +15,4 @@ public record AdminUserResponse(
     boolean isFlagged,
     long totalCompletedContracts,
     long disputeCount,
-    Instant createdAt
-) {}
-
+    Instant createdAt) {}

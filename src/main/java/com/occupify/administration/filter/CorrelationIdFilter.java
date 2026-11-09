@@ -13,23 +13,23 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class CorrelationIdFilter extends OncePerRequestFilter {
 
-    public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
+  public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        String correlationId = request.getHeader(CORRELATION_ID_HEADER);
-        if (!StringUtils.hasText(correlationId)) {
-            correlationId = UUID.randomUUID().toString();
-        }
-        response.setHeader(CORRELATION_ID_HEADER, correlationId);
-        filterChain.doFilter(request, response);
+  @Override
+  protected void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
+    String correlationId = request.getHeader(CORRELATION_ID_HEADER);
+    if (!StringUtils.hasText(correlationId)) {
+      correlationId = UUID.randomUUID().toString();
     }
+    response.setHeader(CORRELATION_ID_HEADER, correlationId);
+    filterChain.doFilter(request, response);
+  }
 
-    public static String resolveCorrelationId(HttpServletRequest request) {
-        if (request == null) return "unknown";
-        String id = request.getHeader(CORRELATION_ID_HEADER);
-        return StringUtils.hasText(id) ? id : "unknown";
-    }
+  public static String resolveCorrelationId(HttpServletRequest request) {
+    if (request == null) return "unknown";
+    String id = request.getHeader(CORRELATION_ID_HEADER);
+    return StringUtils.hasText(id) ? id : "unknown";
+  }
 }
-

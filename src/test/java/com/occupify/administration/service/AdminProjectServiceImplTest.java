@@ -1,5 +1,11 @@
 package com.occupify.administration.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 import com.occupify.administration.controller.ResponseFactory;
 import com.occupify.administration.dto.base.PageResponse;
 import com.occupify.administration.dto.request.AdminProjectFilterRequest;
@@ -34,97 +40,90 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class AdminProjectServiceImplTest {
 
-    @Mock
-    private ProjectRepository projectRepository;
+  @Mock private ProjectRepository projectRepository;
 
-    @Mock
-    private ReportRepository reportRepository;
+  @Mock private ReportRepository reportRepository;
 
-    @Spy
-    private ResponseFactory responseFactory = new ResponseFactory();
+  @Spy private ResponseFactory responseFactory = new ResponseFactory();
 
-    @InjectMocks
-    private AdminProjectServiceImpl projectService;
+  @InjectMocks private AdminProjectServiceImpl projectService;
 
-    private Project sampleProject;
-    private User sampleEmployer;
-    private UUID projectId;
+  private Project sampleProject;
+  private User sampleEmployer;
+  private UUID projectId;
 
-    @BeforeEach
-    void setUp() {
-        projectId = UUID.randomUUID();
-        sampleEmployer = User.builder()
-                .id(UUID.randomUUID())
-                .email("employer@occupify.app")
-                .fullName("Nexus Fintech")
-                .role(UserRole.USER)
-                .status(UserStatus.ACTIVE)
-                .build();
+  @BeforeEach
+  void setUp() {
+    projectId = UUID.randomUUID();
+    sampleEmployer =
+        User.builder()
+            .id(UUID.randomUUID())
+            .email("employer@occupify.app")
+            .fullName("Nexus Fintech")
+            .role(UserRole.USER)
+            .status(UserStatus.ACTIVE)
+            .build();
 
-        sampleProject = Project.builder()
-                .id(projectId)
-                .employer(sampleEmployer)
-                .title("Spring Boot Microservices")
-                .description("Build scalable microservices architecture")
-                .status(ProjectStatus.OPEN)
-                .createdAt(Instant.now())
-                .build();
-    }
+    sampleProject =
+        Project.builder()
+            .id(projectId)
+            .employer(sampleEmployer)
+            .title("Spring Boot Microservices")
+            .description("Build scalable microservices architecture")
+            .status(ProjectStatus.OPEN)
+            .createdAt(Instant.now())
+            .build();
+  }
 
-    @Test
-    @DisplayName("getProjects - should return paginated list of projects")
-    void getProjects_shouldReturnPaginatedProjects() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Project> page = new PageImpl<>(List.of(sampleProject), pageable, 1);
+  @Test
+  @DisplayName("getProjects - should return paginated list of projects")
+  void getProjects_shouldReturnPaginatedProjects() {
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<Project> page = new PageImpl<>(List.of(sampleProject), pageable, 1);
 
-        when(projectRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-        when(reportRepository.countByTargetProjectId(any())).thenReturn(2L);
+    when(projectRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+    when(reportRepository.countByTargetProjectId(any())).thenReturn(2L);
 
-        AdminProjectFilterRequest filter = new AdminProjectFilterRequest("Spring", ProjectStatus.OPEN, null);
-        PageResponse<AdminProjectResponse> result = projectService.getProjects(filter, pageable);
+    AdminProjectFilterRequest filter =
+        new AdminProjectFilterRequest("Spring", ProjectStatus.OPEN, null);
+    PageResponse<AdminProjectResponse> result = projectService.getProjects(filter, pageable);
 
-        assertThat(result).isNotNull();
-        assertThat(result.data()).hasSize(1);
-        AdminProjectResponse response = result.data().get(0);
-        assertThat(response.id()).isEqualTo(projectId);
-        assertThat(response.title()).isEqualTo("Spring Boot Microservices");
-        assertThat(response.employer().fullName()).isEqualTo("Nexus Fintech");
-        assertThat(response.reportCount()).isEqualTo(2L);
-    }
+    assertThat(result).isNotNull();
+    assertThat(result.data()).hasSize(1);
+    AdminProjectResponse response = result.data().get(0);
+    assertThat(response.id()).isEqualTo(projectId);
+    assertThat(response.title()).isEqualTo("Spring Boot Microservices");
+    assertThat(response.employer().fullName()).isEqualTo("Nexus Fintech");
+    assertThat(response.reportCount()).isEqualTo(2L);
+  }
 
-    @Test
-    @DisplayName("getProjectDetail - should return full detail when project exists")
-    void getProjectDetail_shouldReturnDetail() {
-        when(projectRepository.findById(eq(projectId))).thenReturn(Optional.of(sampleProject));
-        when(reportRepository.countByTargetProjectId(any())).thenReturn(0L);
-        when(reportRepository.findByTargetProjectIdOrderByCreatedAtDesc(any())).thenReturn(Collections.emptyList());
+  @Test
+  @DisplayName("getProjectDetail - should return full detail when project exists")
+  void getProjectDetail_shouldReturnDetail() {
+    when(projectRepository.findById(eq(projectId))).thenReturn(Optional.of(sampleProject));
+    when(reportRepository.countByTargetProjectId(any())).thenReturn(0L);
+    when(reportRepository.findByTargetProjectIdOrderByCreatedAtDesc(any()))
+        .thenReturn(Collections.emptyList());
 
-        AdminProjectDetailResponse result = projectService.getProjectDetail(projectId);
+    AdminProjectDetailResponse result = projectService.getProjectDetail(projectId);
 
-        assertThat(result).isNotNull();
-        assertThat(result.id()).isEqualTo(projectId);
-        assertThat(result.title()).isEqualTo("Spring Boot Microservices");
-        assertThat(result.employer().email()).isEqualTo("employer@occupify.app");
-        assertThat(result.reports()).isEmpty();
-    }
+    assertThat(result).isNotNull();
+    assertThat(result.id()).isEqualTo(projectId);
+    assertThat(result.title()).isEqualTo("Spring Boot Microservices");
+    assertThat(result.employer().email()).isEqualTo("employer@occupify.app");
+    assertThat(result.reports()).isEmpty();
+  }
 
-    @Test
-    @DisplayName("getProjectDetail - should throw PROJECT_NOT_FOUND when project does not exist")
-    void getProjectDetail_shouldThrow_whenProjectNotFound() {
-        when(projectRepository.findById(eq(projectId))).thenReturn(Optional.empty());
+  @Test
+  @DisplayName("getProjectDetail - should throw PROJECT_NOT_FOUND when project does not exist")
+  void getProjectDetail_shouldThrow_whenProjectNotFound() {
+    when(projectRepository.findById(eq(projectId))).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> projectService.getProjectDetail(projectId))
-                .isInstanceOf(AdminException.class)
-                .hasFieldOrPropertyWithValue("code", AdminErrorCode.PROJECT_NOT_FOUND.code());
-    }
+    assertThatThrownBy(() -> projectService.getProjectDetail(projectId))
+        .isInstanceOf(AdminException.class)
+        .hasFieldOrPropertyWithValue("code", AdminErrorCode.PROJECT_NOT_FOUND.code());
+  }
 }
-
