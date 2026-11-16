@@ -20,6 +20,4 @@ public record AdminUserDetailResponse(
     long totalCompletedContracts,
     long totalContracts,
     long disputeCount,
-    List<AdminUserContractSummaryResponse> recentContracts
-) {}
-
+    List<AdminUserContractSummaryResponse> recentContracts) {}

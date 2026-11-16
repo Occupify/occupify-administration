@@ -14,6 +14,4 @@ public record AdminProjectDetailResponse(
     Instant createdAt,
     Instant closedAt,
     long reportCount,
-    List<AdminProjectReportItemResponse> reports
-) {}
-
+    List<AdminProjectReportItemResponse> reports) {}

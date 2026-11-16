@@ -12,6 +12,4 @@ public record AdminProjectReportItemResponse(
     ReportReasonCategory reasonCategory,
     String description,
     ReportStatus status,
-    Instant createdAt
-) {}
-
+    Instant createdAt) {}

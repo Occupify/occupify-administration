@@ -19,56 +19,56 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @Component
 public class AdminContextArgumentResolver implements HandlerMethodArgumentResolver {
 
-    @Value("${app.auth.dev-mock.enabled:false}")
-    private boolean devMockEnabled;
+  @Value("${app.auth.dev-mock.enabled:false}")
+  private boolean devMockEnabled;
 
-    @Value("${app.auth.dev-mock.admin-id:99999999-0000-1111-2222-333333333333}")
-    private String devMockAdminId;
+  @Value("${app.auth.dev-mock.admin-id:99999999-0000-1111-2222-333333333333}")
+  private String devMockAdminId;
 
-    @Value("${app.auth.dev-mock.admin-email:admin@occupify.app}")
-    private String devMockAdminEmail;
+  @Value("${app.auth.dev-mock.admin-email:admin@occupify.app}")
+  private String devMockAdminEmail;
 
-    @Override
-    public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(AuthenticatedAdmin.class)
-                && AdminContext.class.isAssignableFrom(parameter.getParameterType());
+  @Override
+  public boolean supportsParameter(MethodParameter parameter) {
+    return parameter.hasParameterAnnotation(AuthenticatedAdmin.class)
+        && AdminContext.class.isAssignableFrom(parameter.getParameterType());
+  }
+
+  @Override
+  public Object resolveArgument(
+      MethodParameter parameter,
+      ModelAndViewContainer mavContainer,
+      NativeWebRequest webRequest,
+      WebDataBinderFactory binderFactory) {
+    HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
+
+    String userIdHeader = request.getHeader("X-User-Id");
+    String userRoleHeader = request.getHeader("X-User-Role");
+    String userEmailHeader = request.getHeader("X-User-Email");
+
+    if (StringUtils.hasText(userIdHeader)) {
+      UUID adminId;
+      try {
+        adminId = UUID.fromString(userIdHeader.trim());
+      } catch (IllegalArgumentException ex) {
+        throw new AdminException(
+            AdminErrorCode.INVALID_PARAMETER, "Invalid UUID in X-User-Id header");
+      }
+
+      if (!"ADMIN".equalsIgnoreCase(userRoleHeader)) {
+        log.warn("[Security] Non-admin role '{}' tried to access admin endpoint", userRoleHeader);
+        throw new AdminException(AdminErrorCode.FORBIDDEN);
+      }
+
+      String email = StringUtils.hasText(userEmailHeader) ? userEmailHeader.trim() : "";
+      return new AdminContext(adminId, email, UserRole.ADMIN);
     }
 
-    @Override
-    public Object resolveArgument(
-            MethodParameter parameter,
-            ModelAndViewContainer mavContainer,
-            NativeWebRequest webRequest,
-            WebDataBinderFactory binderFactory) {
-        HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
-
-        String userIdHeader = request.getHeader("X-User-Id");
-        String userRoleHeader = request.getHeader("X-User-Role");
-        String userEmailHeader = request.getHeader("X-User-Email");
-
-        if (StringUtils.hasText(userIdHeader)) {
-            UUID adminId;
-            try {
-                adminId = UUID.fromString(userIdHeader.trim());
-            } catch (IllegalArgumentException ex) {
-                throw new AdminException(AdminErrorCode.INVALID_PARAMETER, "Invalid UUID in X-User-Id header");
-            }
-
-            if (!"ADMIN".equalsIgnoreCase(userRoleHeader)) {
-                log.warn("[Security] Non-admin role '{}' tried to access admin endpoint", userRoleHeader);
-                throw new AdminException(AdminErrorCode.FORBIDDEN);
-            }
-
-            String email = StringUtils.hasText(userEmailHeader) ? userEmailHeader.trim() : "";
-            return new AdminContext(adminId, email, UserRole.ADMIN);
-        }
-
-        if (devMockEnabled) {
-            log.warn("[Security] Dev mock enabled. Auto-injecting dev admin: {}", devMockAdminEmail);
-            return new AdminContext(UUID.fromString(devMockAdminId), devMockAdminEmail, UserRole.ADMIN);
-        }
-
-        throw new AdminException(AdminErrorCode.UNAUTHORIZED);
+    if (devMockEnabled) {
+      log.warn("[Security] Dev mock enabled. Auto-injecting dev admin: {}", devMockAdminEmail);
+      return new AdminContext(UUID.fromString(devMockAdminId), devMockAdminEmail, UserRole.ADMIN);
     }
+
+    throw new AdminException(AdminErrorCode.UNAUTHORIZED);
+  }
 }
-

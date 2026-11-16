@@ -15,6 +15,4 @@ public record AdminUserContractSummaryResponse(
     ContractStatus status,
     Instant startedAt,
     Instant finishedAt,
-    Instant createdAt
-) {}
-
+    Instant createdAt) {}

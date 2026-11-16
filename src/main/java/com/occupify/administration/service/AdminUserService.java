@@ -8,7 +8,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 
 public interface AdminUserService {
-    PageResponse<AdminUserResponse> getUsers(AdminUserFilterRequest filter, Pageable pageable);
-    AdminUserDetailResponse getUserDetail(UUID id);
-}
+  PageResponse<AdminUserResponse> getUsers(AdminUserFilterRequest filter, Pageable pageable);
 
+  AdminUserDetailResponse getUserDetail(UUID id);
+}

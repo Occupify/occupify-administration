@@ -13,25 +13,23 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    private final AdminContextArgumentResolver adminContextArgumentResolver;
+  private final AdminContextArgumentResolver adminContextArgumentResolver;
 
-    @Override
-    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(adminContextArgumentResolver);
-    }
+  @Override
+  public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+    resolvers.add(adminContextArgumentResolver);
+  }
 
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/docs").setViewName("forward:/scalar.html");
-        registry.addViewController("/docs/").setViewName("forward:/scalar.html");
-        registry.addViewController("/scalar").setViewName("forward:/scalar.html");
-        registry.addViewController("/scalar/").setViewName("forward:/scalar.html");
-    }
+  @Override
+  public void addViewControllers(ViewControllerRegistry registry) {
+    registry.addViewController("/docs").setViewName("forward:/scalar.html");
+    registry.addViewController("/docs/").setViewName("forward:/scalar.html");
+    registry.addViewController("/scalar").setViewName("forward:/scalar.html");
+    registry.addViewController("/scalar/").setViewName("forward:/scalar.html");
+  }
 
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/");
-    }
+  @Override
+  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    registry.addResourceHandler("/**").addResourceLocations("classpath:/static/");
+  }
 }
-

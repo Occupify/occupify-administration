@@ -10,6 +10,8 @@ import com.occupify.administration.event.ContractCreatedEvent;
 import com.occupify.administration.event.ContractRejectedEvent;
 import com.occupify.administration.event.ProjectClosedEvent;
 import com.occupify.administration.event.ProjectCreatedEvent;
+import com.occupify.administration.event.ReportCreatedEvent;
+import com.occupify.administration.event.ReportUpdatedEvent;
 import com.occupify.administration.event.ReviewCreatedEvent;
 import com.occupify.administration.event.UserActivatedEvent;
 import java.util.HashMap;
@@ -85,6 +87,18 @@ public class RabbitMQConfig {
   @Value("${app.rabbitmq.review-created-routing-key:review.created}")
   private String reviewCreatedRoutingKey;
 
+  @Value("${app.rabbitmq.report-exchange:occupify.report.exchange}")
+  private String reportExchangeName;
+
+  @Value("${app.rabbitmq.report-queue:occupify.administration.report.queue}")
+  private String reportQueueName;
+
+  @Value("${app.rabbitmq.report-created-routing-key:report.created}")
+  private String reportCreatedRoutingKey;
+
+  @Value("${app.rabbitmq.report-updated-routing-key:report.updated}")
+  private String reportUpdatedRoutingKey;
+
   @Bean
   public TopicExchange contractExchange() {
     return new TopicExchange(contractExchangeName, true, false);
@@ -152,6 +166,24 @@ public class RabbitMQConfig {
     return BindingBuilder.bind(adminContractQueue)
         .to(contractExchange)
         .with(reviewCreatedRoutingKey);
+  }
+
+  @Bean
+  public TopicExchange reportExchange() {
+    return new TopicExchange(reportExchangeName, true, false);
+  }
+
+  @Bean
+  public Queue adminReportQueue() {
+    Map<String, Object> args = new HashMap<>();
+    args.put("x-dead-letter-exchange", dlxExchangeName);
+    args.put("x-dead-letter-routing-key", dlqRoutingKey);
+    return QueueBuilder.durable(reportQueueName).withArguments(args).build();
+  }
+
+  @Bean
+  public Binding adminReportCreatedBinding(Queue adminReportQueue, TopicExchange reportExchange) {
+    return BindingBuilder.bind(adminReportQueue).to(reportExchange).with(reportCreatedRoutingKey);
   }
 
   @Bean
@@ -286,6 +318,16 @@ public class RabbitMQConfig {
     idClassMapping.put(
         "com.occupify.administration.event.ReviewCreatedEvent", ReviewCreatedEvent.class);
     idClassMapping.put("ReviewCreatedEvent", ReviewCreatedEvent.class);
+
+    idClassMapping.put("com.occupify.core.event.ReportCreatedEvent", ReportCreatedEvent.class);
+    idClassMapping.put(
+        "com.occupify.administration.event.ReportCreatedEvent", ReportCreatedEvent.class);
+    idClassMapping.put("ReportCreatedEvent", ReportCreatedEvent.class);
+
+    idClassMapping.put("com.occupify.core.event.ReportUpdatedEvent", ReportUpdatedEvent.class);
+    idClassMapping.put(
+        "com.occupify.administration.event.ReportUpdatedEvent", ReportUpdatedEvent.class);
+    idClassMapping.put("ReportUpdatedEvent", ReportUpdatedEvent.class);
 
     typeMapper.setIdClassMapping(idClassMapping);
 
