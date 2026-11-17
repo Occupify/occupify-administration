@@ -98,7 +98,7 @@ jobs:
         env:
           SECRET_ADMINISTRATION_OCID: ${{ secrets.SECRET_ADMINISTRATION_OCID }}
         run: |
-          mkdir -p ~/.config/systemd/user/git-ops/compose
+          mkdir -p ~/.config/systemd/user/git-ops/services
           mkdir -p ~/.config/systemd/user/git-ops/env
           mkdir -p ~/.config/systemd/user/git-ops/nginx/logs
           mkdir -p ~/.config/systemd/user/git-ops/nginx/run
@@ -113,7 +113,7 @@ jobs:
             --raw-output | base64 --decode > ~/.config/systemd/user/git-ops/env/administration.env
 
           echo "Sync compose and service units..."
-          cp compose/docker.*.compose.yml ~/.config/systemd/user/git-ops/compose/
+          cp -rf services ~/.config/systemd/user/git-ops/
           cp service/occupify-*.service ~/.config/systemd/user/
           cp nginx/default.conf ~/.config/systemd/user/git-ops/nginx/default.conf
 
