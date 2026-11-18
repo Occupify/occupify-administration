@@ -98,11 +98,8 @@ jobs:
         env:
           SECRET_ADMINISTRATION_OCID: ${{ secrets.SECRET_ADMINISTRATION_OCID }}
         run: |
-          mkdir -p ~/.config/systemd/user/git-ops/services
+          mkdir -p ~/.config/systemd/user/git-ops/services/administration
           mkdir -p ~/.config/systemd/user/git-ops/env
-          mkdir -p ~/.config/systemd/user/git-ops/nginx/logs
-          mkdir -p ~/.config/systemd/user/git-ops/nginx/run
-          mkdir -p ~/.config/systemd/user/git-ops/nginx/body
 
           echo "Inject administration.env..."
           oci secrets secret-bundle get \
@@ -112,10 +109,9 @@ jobs:
             --query 'data."secret-bundle-content".content' \
             --raw-output | base64 --decode > ~/.config/systemd/user/git-ops/env/administration.env
 
-          echo "Sync compose and service units..."
-          cp -rf services ~/.config/systemd/user/git-ops/
-          cp service/occupify-*.service ~/.config/systemd/user/
-          cp nginx/default.conf ~/.config/systemd/user/git-ops/nginx/default.conf
+          echo "Sync administration manifests and systemd units..."
+          cp -rf services/administration ~/.config/systemd/user/git-ops/services/
+          cp service/occupify-*-administration.service ~/.config/systemd/user/
 
       - name: Prune Old OCI Secret Versions
         env:
