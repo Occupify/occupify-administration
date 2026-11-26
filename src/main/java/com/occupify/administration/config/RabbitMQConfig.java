@@ -8,12 +8,14 @@ import com.occupify.administration.event.ContractCompensationRequestedEvent;
 import com.occupify.administration.event.ContractCompletedEvent;
 import com.occupify.administration.event.ContractCreatedEvent;
 import com.occupify.administration.event.ContractRejectedEvent;
+import com.occupify.administration.event.ProjectCloseRequestedEvent;
 import com.occupify.administration.event.ProjectClosedEvent;
 import com.occupify.administration.event.ProjectCreatedEvent;
 import com.occupify.administration.event.ReportCreatedEvent;
 import com.occupify.administration.event.ReportUpdatedEvent;
 import com.occupify.administration.event.ReviewCreatedEvent;
 import com.occupify.administration.event.UserActivatedEvent;
+import com.occupify.administration.event.UserStatusChangedEvent;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.amqp.core.*;
@@ -328,6 +330,15 @@ public class RabbitMQConfig {
     idClassMapping.put(
         "com.occupify.administration.event.ReportUpdatedEvent", ReportUpdatedEvent.class);
     idClassMapping.put("ReportUpdatedEvent", ReportUpdatedEvent.class);
+
+    idClassMapping.put(
+        "com.occupify.administration.event.UserStatusChangedEvent", UserStatusChangedEvent.class);
+    idClassMapping.put("UserStatusChangedEvent", UserStatusChangedEvent.class);
+
+    idClassMapping.put(
+        "com.occupify.administration.event.ProjectCloseRequestedEvent",
+        ProjectCloseRequestedEvent.class);
+    idClassMapping.put("ProjectCloseRequestedEvent", ProjectCloseRequestedEvent.class);
 
     typeMapper.setIdClassMapping(idClassMapping);
 

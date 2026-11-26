@@ -16,6 +16,8 @@ spring:
         auto-startup: false
 
 app:
+  scheduling:
+    enabled: false
   auth:
     dev-mock:
       enabled: true
@@ -26,9 +28,11 @@ app:
     project-queue: occupify.administration.project.queue
     project-created-routing-key: project.created
     project-closed-routing-key: project.closed
+    project-close-requested-routing-key: project.close.requested
     user-exchange: occupify.user.exchange
     user-queue: occupify.administration.user.queue
     user-activated-routing-key: user.activated
+    user-status-changed-routing-key: user.status.changed
     contract-exchange: occupify.contract.exchange
     contract-queue: occupify.administration.contract.queue
     contract-accepted-routing-key: contract.accepted
