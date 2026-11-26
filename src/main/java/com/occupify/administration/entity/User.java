@@ -45,6 +45,9 @@ public class User {
   @Column(nullable = false, length = 50)
   private UserStatus status;
 
+  @Column(name = "status_reason", columnDefinition = "TEXT")
+  private String statusReason;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 

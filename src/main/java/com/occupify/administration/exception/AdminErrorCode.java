@@ -13,7 +13,11 @@ public enum AdminErrorCode implements BaseErrorCode {
   PROJECT_NOT_FOUND("ADM_002", "Project not found with specified identifier", HttpStatus.NOT_FOUND),
   INVALID_USER_STATUS(
       "ADM_003", "Invalid user status transition requested", HttpStatus.BAD_REQUEST),
-  REPORT_NOT_FOUND("ADM_004", "Report not found with specified identifier", HttpStatus.NOT_FOUND);
+  REPORT_NOT_FOUND("ADM_004", "Report not found with specified identifier", HttpStatus.NOT_FOUND),
+  CANNOT_MODIFY_SELF(
+      "ADM_005", "Admin cannot lock or delete their own account", HttpStatus.BAD_REQUEST),
+  CANNOT_MODIFY_ADMIN(
+      "ADM_006", "Cannot lock or delete another administrator account", HttpStatus.FORBIDDEN);
 
   private final String code;
   private final String message;
