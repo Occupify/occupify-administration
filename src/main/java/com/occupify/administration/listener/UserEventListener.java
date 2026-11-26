@@ -88,6 +88,7 @@ public class UserEventListener {
     return switch (normalized) {
       case "ACTIVE" -> UserStatus.ACTIVE;
       case "INACTIVE" -> UserStatus.INACTIVE;
+      case "BANNED" -> UserStatus.BANNED;
       case "DELETED" -> UserStatus.DELETED;
       default -> {
         try {

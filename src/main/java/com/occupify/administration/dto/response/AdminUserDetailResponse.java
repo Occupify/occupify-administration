@@ -13,6 +13,7 @@ public record AdminUserDetailResponse(
     String avatarUrl,
     UserRole role,
     UserStatus status,
+    String statusReason,
     Instant createdAt,
     Instant deletedAt,
     boolean isFlagged,
