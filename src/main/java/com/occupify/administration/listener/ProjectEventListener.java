@@ -122,21 +122,44 @@ public class ProjectEventListener {
         .findById(event.projectId())
         .ifPresent(
             project -> {
+              boolean alreadyClosed = project.getStatus() == ProjectStatus.CLOSED;
               project.setStatus(ProjectStatus.CLOSED);
-              Instant closedInstant = event.closedAt() != null ? event.closedAt() : Instant.now();
+              Instant closedInstant =
+                  event.closedAt() != null
+                      ? event.closedAt()
+                      : (project.getClosedAt() != null ? project.getClosedAt() : Instant.now());
               project.setClosedAt(closedInstant);
               projectRepository.save(project);
 
-              User employer =
-                  event.employerId() != null
-                      ? userRepository.findById(event.employerId()).orElse(project.getEmployer())
-                      : project.getEmployer();
+              boolean closedByAdmin = "ADMIN".equalsIgnoreCase(event.actorRole());
+              if (alreadyClosed && closedByAdmin) {
+                log.info(
+                    "[Admin Project Listener] Project [{}] already marked CLOSED by admin; reconciled timestamp without duplicate audit",
+                    event.projectId());
+                return;
+              }
+
+              User actor;
+              ActorRole actorRole;
+              if (closedByAdmin) {
+                actor =
+                    event.actorId() != null
+                        ? userRepository.findById(event.actorId()).orElse(null)
+                        : null;
+                actorRole = ActorRole.ADMIN;
+              } else {
+                actor =
+                    event.employerId() != null
+                        ? userRepository.findById(event.employerId()).orElse(project.getEmployer())
+                        : project.getEmployer();
+                actorRole = ActorRole.EMPLOYER;
+              }
 
               SystemAuditLog auditLog =
                   SystemAuditLog.builder()
                       .id(UUID.randomUUID())
-                      .actor(employer)
-                      .actorRole(ActorRole.EMPLOYER)
+                      .actor(actor)
+                      .actorRole(actorRole)
                       .action("PROJECT_CLOSED")
                       .targetService(TargetService.CORE)
                       .targetEntity("PROJECT")
