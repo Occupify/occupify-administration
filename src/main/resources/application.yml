@@ -57,9 +57,11 @@ app:
     project-queue: ${RABBITMQ_PROJECT_QUEUE:occupify.administration.project.queue}
     project-created-routing-key: ${RABBITMQ_PROJECT_CREATED_ROUTING_KEY:project.created}
     project-closed-routing-key: ${RABBITMQ_PROJECT_CLOSED_ROUTING_KEY:project.closed}
+    project-close-requested-routing-key: ${RABBITMQ_PROJECT_CLOSE_REQUESTED_ROUTING_KEY:project.close.requested}
     user-exchange: ${RABBITMQ_USER_EXCHANGE:occupify.user.exchange}
     user-queue: ${RABBITMQ_USER_QUEUE:occupify.administration.user.queue}
     user-activated-routing-key: ${RABBITMQ_USER_ACTIVATED_ROUTING_KEY:user.activated}
+    user-status-changed-routing-key: ${RABBITMQ_USER_STATUS_CHANGED_ROUTING_KEY:user.status.changed}
     contract-exchange: ${RABBITMQ_CONTRACT_EXCHANGE:occupify.contract.exchange}
     contract-queue: ${RABBITMQ_CONTRACT_QUEUE:occupify.administration.contract.queue}
     contract-accepted-routing-key: ${RABBITMQ_CONTRACT_ACCEPTED_ROUTING_KEY:contract.accepted}

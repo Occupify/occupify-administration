@@ -213,4 +213,39 @@ class ProjectEventListenerTest {
     verifyNoInteractions(projectRepository);
     verifyNoInteractions(auditLogRepository);
   }
+
+  @Test
+  @DisplayName(
+      "Should reconcile timestamp without duplicating audit log when already CLOSED by ADMIN")
+  void handleProjectClosed_whenAlreadyClosedByAdmin_skipsDuplicateAuditLog() {
+    UUID projectId = UUID.randomUUID();
+    UUID adminId = UUID.randomUUID();
+    Instant coreClosedAt = Instant.parse("2026-11-25T12:05:00Z");
+
+    Project alreadyClosedProject =
+        Project.builder()
+            .id(projectId)
+            .title("Closed Project")
+            .status(ProjectStatus.CLOSED)
+            .closedAt(Instant.parse("2026-11-25T12:04:59Z"))
+            .build();
+
+    when(projectRepository.findById(projectId)).thenReturn(Optional.of(alreadyClosedProject));
+
+    ProjectClosedEvent event =
+        new ProjectClosedEvent(
+            projectId,
+            "Closed Project",
+            UUID.randomUUID(),
+            "emp@occupify.local",
+            adminId,
+            "ADMIN",
+            coreClosedAt);
+
+    listener.handleProjectClosed(event);
+
+    assertThat(alreadyClosedProject.getClosedAt()).isEqualTo(coreClosedAt);
+    verify(projectRepository).save(alreadyClosedProject);
+    verifyNoInteractions(auditLogRepository);
+  }
 }

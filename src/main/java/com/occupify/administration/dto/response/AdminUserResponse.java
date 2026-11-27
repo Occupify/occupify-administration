@@ -12,6 +12,7 @@ public record AdminUserResponse(
     String avatarUrl,
     UserRole role,
     UserStatus status,
+    String statusReason,
     boolean isFlagged,
     long totalCompletedContracts,
     long disputeCount,

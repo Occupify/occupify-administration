@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.occupify.administration.dto.base.PageResponse;
+import com.occupify.administration.dto.request.AccountModerationRequest;
 import com.occupify.administration.dto.request.AdminUserFilterRequest;
 import com.occupify.administration.dto.response.AdminUserDetailResponse;
 import com.occupify.administration.dto.response.AdminUserResponse;
@@ -64,6 +66,7 @@ class AdminUserControllerTest {
             null,
             UserRole.USER,
             UserStatus.ACTIVE,
+            null,
             false,
             3,
             0,
@@ -100,6 +103,7 @@ class AdminUserControllerTest {
             null,
             UserRole.USER,
             UserStatus.ACTIVE,
+            null,
             Instant.now(),
             null,
             false,
@@ -130,5 +134,86 @@ class AdminUserControllerTest {
     assertThatThrownBy(() -> controller.getUserDetail(userId, adminContext))
         .isInstanceOf(AdminException.class)
         .hasFieldOrPropertyWithValue("code", AdminErrorCode.USER_NOT_FOUND.code());
+  }
+
+  @Test
+  @DisplayName("DELETE /admin/users/{id} - Should soft delete account with nullable reason")
+  void deleteUser_shouldReturnSuccess() {
+    UUID userId = UUID.randomUUID();
+    var response =
+        controller.deleteUser(userId, new AccountModerationRequest("Spam account"), adminContext);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().statusCode()).isEqualTo(200);
+    verify(adminUserService).deleteUser(userId, "Spam account", adminContext);
+  }
+
+  @Test
+  @DisplayName("DELETE /admin/users/{id} - Should allow null request body")
+  void deleteUser_shouldAllowNullBody() {
+    UUID userId = UUID.randomUUID();
+    var response = controller.deleteUser(userId, null, adminContext);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    verify(adminUserService).deleteUser(userId, null, adminContext);
+  }
+
+  @Test
+  @DisplayName("PATCH /admin/users/{id}/lock - Should lock account and return updated response")
+  void lockUser_shouldReturnLockedUser() {
+    UUID userId = UUID.randomUUID();
+    AdminUserResponse locked =
+        new AdminUserResponse(
+            userId,
+            "user@example.com",
+            "Target User",
+            null,
+            UserRole.USER,
+            UserStatus.BANNED,
+            "Violation of terms",
+            false,
+            0,
+            1,
+            Instant.now());
+
+    when(adminUserService.lockUser(userId, "Violation of terms", adminContext)).thenReturn(locked);
+
+    var response =
+        controller.lockUser(
+            userId, new AccountModerationRequest("Violation of terms"), adminContext);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().data().status()).isEqualTo(UserStatus.BANNED);
+    assertThat(response.getBody().data().statusReason()).isEqualTo("Violation of terms");
+  }
+
+  @Test
+  @DisplayName("PATCH /admin/users/{id}/unlock - Should unlock account and return updated response")
+  void unlockUser_shouldReturnActiveUser() {
+    UUID userId = UUID.randomUUID();
+    AdminUserResponse unlocked =
+        new AdminUserResponse(
+            userId,
+            "user@example.com",
+            "Target User",
+            null,
+            UserRole.USER,
+            UserStatus.ACTIVE,
+            null,
+            false,
+            0,
+            1,
+            Instant.now());
+
+    when(adminUserService.unlockUser(userId, adminContext)).thenReturn(unlocked);
+
+    var response = controller.unlockUser(userId, adminContext);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().data().status()).isEqualTo(UserStatus.ACTIVE);
+    assertThat(response.getBody().data().statusReason()).isNull();
   }
 }

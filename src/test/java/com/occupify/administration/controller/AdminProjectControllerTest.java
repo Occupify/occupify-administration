@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.occupify.administration.dto.base.PageResponse;
 import com.occupify.administration.dto.request.AdminProjectFilterRequest;
+import com.occupify.administration.dto.request.CloseProjectRequest;
 import com.occupify.administration.dto.response.AdminProjectDetailResponse;
 import com.occupify.administration.dto.response.AdminProjectEmployerResponse;
 import com.occupify.administration.dto.response.AdminProjectResponse;
@@ -132,5 +133,35 @@ class AdminProjectControllerTest {
     assertThatThrownBy(() -> controller.getProjectDetail(projectId, adminContext))
         .isInstanceOf(AdminException.class)
         .hasFieldOrPropertyWithValue("code", AdminErrorCode.PROJECT_NOT_FOUND.code());
+  }
+
+  @Test
+  @DisplayName("PATCH /admin/projects/{id}/close - Should close project and return 200 OK")
+  void closeProject_shouldReturnClosedProject() {
+    UUID projectId = UUID.randomUUID();
+    AdminProjectEmployerResponse employer =
+        new AdminProjectEmployerResponse(
+            UUID.randomUUID(), "employer@example.com", "Employer Co", null);
+    AdminProjectResponse closedResponse =
+        new AdminProjectResponse(
+            projectId,
+            "Spring Boot Microservice",
+            "Description",
+            ProjectStatus.CLOSED,
+            employer,
+            Instant.now(),
+            Instant.now(),
+            1);
+
+    when(adminProjectService.closeProject(eq(projectId), eq("Policy violation"), eq(adminContext)))
+        .thenReturn(closedResponse);
+
+    var response =
+        controller.closeProject(
+            projectId, new CloseProjectRequest("Policy violation"), adminContext);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().data().status()).isEqualTo(ProjectStatus.CLOSED);
   }
 }

@@ -9,21 +9,34 @@ import com.occupify.administration.dto.response.AdminProjectReportItemResponse;
 import com.occupify.administration.dto.response.AdminProjectResponse;
 import com.occupify.administration.entity.Project;
 import com.occupify.administration.entity.Report;
+import com.occupify.administration.entity.SystemAuditLog;
 import com.occupify.administration.entity.User;
+import com.occupify.administration.enums.ActorRole;
+import com.occupify.administration.enums.AuditStatus;
+import com.occupify.administration.enums.ProjectStatus;
+import com.occupify.administration.enums.TargetService;
+import com.occupify.administration.event.ProjectCloseRequestedEvent;
 import com.occupify.administration.exception.AdminErrorCode;
 import com.occupify.administration.exception.AdminException;
+import com.occupify.administration.producer.AdminOutboxService;
 import com.occupify.administration.repository.ProjectRepository;
 import com.occupify.administration.repository.ReportRepository;
+import com.occupify.administration.repository.SystemAuditLogRepository;
+import com.occupify.administration.repository.UserRepository;
+import com.occupify.administration.security.AdminContext;
 import com.occupify.administration.service.AdminProjectService;
 import jakarta.persistence.criteria.Predicate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -36,7 +49,16 @@ public class AdminProjectServiceImpl implements AdminProjectService {
 
   private final ProjectRepository projectRepository;
   private final ReportRepository reportRepository;
+  private final UserRepository userRepository;
+  private final SystemAuditLogRepository auditLogRepository;
+  private final AdminOutboxService adminOutboxService;
   private final ResponseFactory responseFactory;
+
+  @Value("${app.rabbitmq.project-exchange:occupify.project.exchange}")
+  private String projectExchangeName = "occupify.project.exchange";
+
+  @Value("${app.rabbitmq.project-close-requested-routing-key:project.close.requested}")
+  private String projectCloseRequestedRoutingKey = "project.close.requested";
 
   @Override
   public PageResponse<AdminProjectResponse> getProjects(
@@ -112,6 +134,60 @@ public class AdminProjectServiceImpl implements AdminProjectService {
         project.getClosedAt(),
         reportCount,
         reports);
+  }
+
+  @Override
+  @Transactional
+  public AdminProjectResponse closeProject(
+      UUID id, @Nullable String reason, AdminContext adminContext) {
+    UUID adminId = adminContext != null ? adminContext.adminId() : null;
+    log.info("[Admin] Closing project [{}] by admin [{}]", id, adminId);
+
+    Project project =
+        projectRepository
+            .findById(id)
+            .orElseThrow(
+                () ->
+                    new AdminException(
+                        AdminErrorCode.PROJECT_NOT_FOUND, "Project not found with id: " + id));
+
+    if (project.getStatus() == ProjectStatus.CLOSED) {
+      log.info("[Admin] Project [{}] is already CLOSED; returning idempotent response", id);
+      return toAdminProjectResponse(project);
+    }
+
+    Instant now = Instant.now();
+    project.setStatus(ProjectStatus.CLOSED);
+    project.setClosedAt(now);
+    project = projectRepository.save(project);
+
+    User actor = adminId != null ? userRepository.findById(adminId).orElse(null) : null;
+    SystemAuditLog auditLog =
+        SystemAuditLog.builder()
+            .id(UUID.randomUUID())
+            .actor(actor)
+            .actorRole(ActorRole.ADMIN)
+            .action("PROJECT_CLOSED")
+            .targetService(TargetService.CORE)
+            .targetEntity("PROJECT")
+            .targetId(project.getId().toString())
+            .status(AuditStatus.SUCCESS)
+            .createdAt(now)
+            .build();
+    auditLogRepository.save(auditLog);
+
+    String normalizedReason = StringUtils.hasText(reason) ? reason.trim() : null;
+    ProjectCloseRequestedEvent event =
+        new ProjectCloseRequestedEvent(project.getId(), adminId, normalizedReason, now);
+    adminOutboxService.enqueueAndDispatch(
+        "PROJECT",
+        project.getId(),
+        projectExchangeName,
+        projectCloseRequestedRoutingKey,
+        AdminOutboxService.EVENT_TYPE_PROJECT_CLOSE_REQUESTED,
+        event);
+
+    return toAdminProjectResponse(project);
   }
 
   private AdminProjectResponse toAdminProjectResponse(Project project) {
