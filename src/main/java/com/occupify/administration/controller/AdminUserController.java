@@ -90,7 +90,8 @@ public class AdminUserController extends AbstractBaseController {
       @Valid @RequestBody(required = false) AccountModerationRequest request,
       @Parameter(hidden = true) @AuthenticatedAdmin AdminContext adminContext) {
     String reason = request != null ? request.reason() : null;
-    log.info("[DELETE /admin/users/{}] Admin [{}] soft-deleting account", id, adminContext.adminId());
+    log.info(
+        "[DELETE /admin/users/{}] Admin [{}] soft-deleting account", id, adminContext.adminId());
     adminUserService.deleteUser(id, reason, adminContext);
     return success("User account deleted successfully");
   }

@@ -45,8 +45,7 @@ class AdminOutboxServiceTest {
     UserStatusChangedEvent event =
         new UserStatusChangedEvent(userId, "BANNED", "Abuse", UUID.randomUUID(), Instant.now());
 
-    when(outboxEventRepository.save(any(OutboxEvent.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
+    when(outboxEventRepository.save(any(OutboxEvent.class))).thenAnswer(inv -> inv.getArgument(0));
 
     OutboxEvent saved =
         outboxService.enqueueAndDispatch(
@@ -73,8 +72,7 @@ class AdminOutboxServiceTest {
     UserStatusChangedEvent event =
         new UserStatusChangedEvent(userId, "DELETED", null, UUID.randomUUID(), Instant.now());
 
-    when(outboxEventRepository.save(any(OutboxEvent.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
+    when(outboxEventRepository.save(any(OutboxEvent.class))).thenAnswer(inv -> inv.getArgument(0));
     doThrow(new RuntimeException("Broker down"))
         .when(rabbitTemplate)
         .convertAndSend(any(String.class), any(String.class), any(Object.class));

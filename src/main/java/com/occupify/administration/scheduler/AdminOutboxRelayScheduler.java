@@ -28,7 +28,8 @@ public class AdminOutboxRelayScheduler {
       return;
     }
 
-    log.debug("[Admin Outbox Scheduler] Processing {} pending outbox event(s)", pendingEvents.size());
+    log.debug(
+        "[Admin Outbox Scheduler] Processing {} pending outbox event(s)", pendingEvents.size());
     for (OutboxEvent event : pendingEvents) {
       adminOutboxService.relayDirectly(event);
     }

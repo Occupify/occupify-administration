@@ -272,7 +272,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     if (user.getStatus() != UserStatus.BANNED) {
       throw new AdminException(
           AdminErrorCode.INVALID_USER_STATUS,
-          "Only locked (BANNED) user accounts can be unlocked. Current status: " + user.getStatus());
+          "Only locked (BANNED) user accounts can be unlocked. Current status: "
+              + user.getStatus());
     }
 
     Instant now = Instant.now();
